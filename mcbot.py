@@ -5,18 +5,22 @@ from botpy.ext.cog_yaml import read
 from botpy.message import Message, GroupMessage
 import setproctitle
 
-
 #自定义模块
 from Module.server import server
 
 
+#定义日志路径
+log_dir = 'Log'
+start_log_path = os.path.join('botpy.log')
+group_log_path = os.path.join(log_dir, 'group')
+channel_log_path = os.path.join(log_dir, 'channel')
 #定义日志记录
 _log = logging.get_logger()
-_log_group = logging.get_logger("group")
+_log_group = logging.get_logger(group_log_path)
+_log_channel = logging.get_logger(channel_log_path)
 #删除上一次bot运行日志
-log_file_path = 'botpy.log'
-if os.path.exists(log_file_path):
-    os.remove(log_file_path)
+if os.path.exists(start_log_path):
+    os.remove(start_log_path)
 
 
 #======================================================================================================================#
@@ -25,10 +29,10 @@ if os.path.exists(log_file_path):
 class HappleCraftBot(botpy.Client):
     #机器人准备好时触发
     async def on_ready(self):
-        print(f"{self.robot.name} 已经准备好了")
         _log.info(f"{self.robot.name} 已经准备好了")
 
 #----------------------------------------------------------------------------------------------------------------------#
+
     #监听公域消息事件
     #当收到@机器人的消息时
     #on_at_message_create(self, message: Message)
@@ -38,17 +42,20 @@ class HappleCraftBot(botpy.Client):
         #封装回复函数,msg_type参数说明
         #消息类型： 0 文本，2 是 markdown，3 ark 消息，4 embed，7 media 富媒体
         async def on_group_at_reply(response, msg_type):
-            reply = await message._api.post_group_message(
+            await message._api.post_group_message(
                 group_openid=message.group_openid,
                 msg_type=msg_type,
                 msg_id=message.id,
                 content=response
             )
-            _log_group.info(f"\ngroup_openid: %s, \nmsg_id: %s, \n回复消息content: %s\n", message.group_openid, message.id, response)
+            _log_group.info(f"\ngroup_openid: %s, \nmsg_id: %s, \n回复消息content: \"%s\"\n", message.group_openid, message.id, response)
 
+        #开始执行公域事件
         response = await server(message.content)
         _log_group.info(f"\nMessage ID: %s, \n接受消息content: %s",message.id ,message.content)
         await on_group_at_reply(response, 0)
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------#
 
@@ -58,9 +65,20 @@ class HappleCraftBot(botpy.Client):
     #删除（撤回）消息事件
     #on_message_delete(self, message: Message)
     async def on_message_create(self, message: Message):
-        _log.info(message.author.avatar)
-        if "/server" in message.content:
-            await message.reply(content=f"Test Success!\n")
+        # 封装回复函数
+        async def on_message_reply(response):
+            await message._api.post_message(
+                channel_id=message.channel_id,
+                msg_id=message.id,
+                content=response
+            )
+            _log_channel.info(f"\nchannle_id: %s, \nmsg_id: %s, \n回复消息content: \"%s\"\n", message.channel_id,message.id, response)
+
+        response = await server(message.content)
+        _log_channel.info(f"\nMessage ID: %s, \n接受消息content: %s", message.id, message.content)
+        await on_message_reply(response)
+
+
 
 # ----------------------------------------------------------------------------------------------------------------------#
 
