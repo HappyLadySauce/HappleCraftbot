@@ -5,6 +5,7 @@ from botpy.ext.cog_yaml import read
 from botpy.message import Message, GroupMessage
 import setproctitle
 
+from Module.about import craft
 #自定义模块
 from Module.server import server
 
@@ -19,11 +20,12 @@ _log = logging.get_logger()
 _log_group = logging.get_logger(group_log_path)
 _log_channel = logging.get_logger(channel_log_path)
 #删除上一次bot运行日志
-if os.path.exists(start_log_path):
-    os.remove(start_log_path)
+# if os.path.exists(start_log_path):
+#     os.remove(start_log_path)
 
 
 #======================================================================================================================#
+
 #机器人运行流程
 
 class HappleCraftBot(botpy.Client):
@@ -52,6 +54,7 @@ class HappleCraftBot(botpy.Client):
 
         #开始执行公域事件
         response = await server(message.content)
+        response = await craft(message.content)
         _log_group.info(f"\nMessage ID: %s, \n接受消息content: %s",message.id ,message.content)
         await on_group_at_reply(response, 0)
 
@@ -75,10 +78,9 @@ class HappleCraftBot(botpy.Client):
             _log_channel.info(f"\nchannle_id: %s, \nmsg_id: %s, \n回复消息content: \"%s\"\n", message.channel_id,message.id, response)
 
         response = await server(message.content)
+        response = await craft(message.content)
         _log_channel.info(f"\nMessage ID: %s, \n接受消息content: %s", message.id, message.content)
         await on_message_reply(response)
-
-
 
 # ----------------------------------------------------------------------------------------------------------------------#
 

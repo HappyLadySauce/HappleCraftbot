@@ -4,10 +4,11 @@
 import aiohttp
 
 #bs转GB
-GB = 1024 * 1024 * 1024
+GB = 1024 ** 3
 
+#纯文本形式
 async def server(content):
-    if "/server" in content:
+    if "/Server" in content:
         data = await curl("http://game.happlelaoganma.cn:4567/v1/server")
         if data:
             try:
