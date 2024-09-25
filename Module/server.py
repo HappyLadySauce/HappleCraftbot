@@ -1,14 +1,15 @@
-#读取HappleCraft服务器状态数据
-#本模块用于读取远端服务器的JSON文件,并进行数据处理然后返回
+# 读取HappleCraft服务器状态数据
+# 本模块用于读取远端服务器的JSON文件,并进行数据处理然后返回
 
+import asyncio
+import json
 import aiohttp
 
-#bs转GB
+# bs转GB
 GB = 1024 ** 3
 
-#纯文本形式
-async def server(content):
-    if "/Server" in content:
+# 纯文本形式
+async def server():
         data = await curl("http://game.happlelaoganma.cn:4567/v1/server")
         if data:
             try:
@@ -41,15 +42,24 @@ async def server(content):
 
 async def curl(url):
     try:
-        # 发送GET请求
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status != 200:
-                    print(f"请求失败，状态码: {response.status}")
-                    return None
+            # 设置超时时间为5秒
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with session.get(url, timeout=timeout) as resp:
+                # 确保响应状态码为200，表示请求成功
+                if resp.status == 200:
+                    content = await resp.text()
+                    content_json_obj = json.loads(content)
+                    return content_json_obj
                 else:
-                    # 成功返回json文件内容
-                    return await response.json()
+                    print(f"请求失败，状态码: {resp.status}")
+                    return None
     except aiohttp.ClientConnectionError as e:
         print(f"连接服务器失败: {e}")
+        return None
+    except asyncio.TimeoutError:
+        print("请求超时")
+        return None
+    except json.JSONDecodeError:
+        print("解析JSON失败")
         return None

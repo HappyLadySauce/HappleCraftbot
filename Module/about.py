@@ -1,6 +1,5 @@
 
-async def craft(content):
-    if "/Craft" in content:
+async def craft():
         return (f"HappleCraft介绍:\n"
                 f"服主的个人网站:\n"
                 f"https://www.happlelaoganma.cn/102379881.json/1\n"
