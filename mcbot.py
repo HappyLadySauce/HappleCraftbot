@@ -5,10 +5,10 @@ from botpy.ext.cog_yaml import read
 from botpy.message import Message, GroupMessage
 import setproctitle
 
-from Module.about import craft
 # 自定义模块
 from Module.server import server
-
+from Module.content import craft
+from Module.mcmanager import node, instance
 
 # 定义日志路径
 log_dir = 'Log'
@@ -63,6 +63,14 @@ class HappleCraftBot(botpy.Client):
             response = await craft()
             # 返回用户消息
             await on_group_at_reply(response, 0)
+        elif "/Node" in message.content:
+            response = await node()
+            # 返回用户消息
+            await on_group_at_reply(response, 0)
+        elif "/Instance" in message.content:
+            response = await instance()
+            # 返回用户消息
+            await on_group_at_reply(response, 0)
 
 
 # ----------------------------------------------------------------------------------------------------------------------#
@@ -93,6 +101,15 @@ class HappleCraftBot(botpy.Client):
         elif "/Craft" in message.content:
             response = await craft()
             # 返回用户消息
+            await on_message_reply(response)
+        elif "/Node" in message.content:
+            response = await node()
+            # 返回用户消息
+            await on_message_reply(response)
+        elif "/Instance" in message.content:
+            response = await instance()
+            # 返回用户消息
+            print(response)
             await on_message_reply(response)
 
 
