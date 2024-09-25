@@ -10,7 +10,7 @@ GB = 1024 ** 3
 
 # 纯文本形式
 async def server():
-        data = await curl("http://game.happlelaoganma.cn:4567/v1/server")
+        data = await curl("http://game.happlelaoganma.cn:24567/v1/server")
         if data:
             try:
                 tps = data.get('tps', 0)
