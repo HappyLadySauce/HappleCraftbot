@@ -17,20 +17,15 @@ async def server():
                 online_players = data.get('onlinePlayers', 0)
                 total_memory = data['health']['totalMemory']
                 maxmemory = data['health']['maxMemory']
-                freememory = data['health']['freeMemory']
                 total_memory /= GB
                 maxmemory /= GB
-                freememory /= GB
                 total_memory = round(total_memory, 1)
                 maxmemory = round(maxmemory, 1)
-                freememory = round(freememory, 1)
                 return (f"收到指令\n"
                 f"HappleCraft的服务器状态如下:\n"
                 f"服务器TPS为: {tps}\n"
                 f"服务器在线玩家数量: {online_players}\n"
-                f"MC内存{total_memory}/{maxmemory}GB\n"
-                f"服务器剩余内存{freememory}GB\n"
-                f"服务器总内存为MC内存+服务器剩余内存+已使用内存")
+                f"MC内存{total_memory}/{maxmemory}GB\n")
             except Exception as e:
                 print(f"处理数据时出错: {e}")
                 return "处理服务器状态数据时出错\n"
