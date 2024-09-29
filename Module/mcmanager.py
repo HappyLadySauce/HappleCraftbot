@@ -1,8 +1,7 @@
 import os
-from multiprocessing.sharedctypes import synchronized
-
 import aiohttp
 import yaml
+import datetime
 
 # 读取apikey
 def read(config_path):
@@ -18,18 +17,23 @@ test_config = read(config_path)
 # 获取 apikey
 apikey = test_config.get("apikey", None)
 
-# 获取远程节点列表
-server_url = f'http://game.happlelaoganma.cn:20000/api/service/remote_services_system?apikey={apikey}'
-# auth_url = f'http://game.happlelaoganma.cn:20000/api/auth/search?apikey={apikey}&userName=ssddffaa&page=1&page_size=20&role=10'
-instance_url = f'http://game.happlelaoganma.cn:20000/api/instance?apikey={apikey}'
+# 调用API链接
+daemonId = f"15c4caf0920347538aadc6d2ff1adc10"
+url = f'http://game.happlelaoganma.cn:20000'
+server_url = f'{url}/api/service/remote_services_system?apikey={apikey}'
+auth_url = f'{url}/api/auth/search?apikey={apikey}&userName=ssddffaa&page=1&page_size=20&role=10'
+instance_url = f'{url}/api/instance?apikey={apikey}'
+operate_url = f'{url}/api/protected_instance/'
+operator = {
+    'start',
+    'stop',
+    'restart'
+}
 headers = {
     'Content-Type': 'application/json; charset=utf-8',
     'X-Requested-With': 'XMLHttpRequest'
 }
-
 #--------------------------------------------------------------------------------------------------------------------#
-
-auth_url = f'http://game.happlelaoganma.cn:20000/api/auth/search?apikey={apikey}&userName=ssddffaa&page=1&page_size=20&role=10'
 
 def instance_json_to_dict(json_data):
     users_data = json_data.get('data', {}).get('data', [])
@@ -38,10 +42,11 @@ def instance_json_to_dict(json_data):
         for instance in user.get('instances', []):
             instance_info = {
                 'uuid': instance.get('instanceUuid'),
-                'daemonId': instance.get('daemonId')
+                'daemonId': daemonId
             }
             instances_list.append(instance_info)
     return instances_list
+
 
 async def auth():
     async with aiohttp.ClientSession() as session:
@@ -66,19 +71,39 @@ async def auth():
             return None
 
 
+def convert_timestamp_to_datetime(timestamp):
+    # 将毫秒级时间戳转换为日期和时间
+    datetime_obj = datetime.datetime.fromtimestamp(timestamp / 1000.0)
+    return datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
+
+
 def instance_json_to_text(json_data, node_number):
     data = json_data['data']
-    instance_info = f"UUID: {data['instanceUuid']}\n启动次数: {data['started']}, 状态: {data['status']}"
-    system_info = f"当前玩家: {data['info']['currentPlayers']}"
+    status_map = {
+        -1: "忙碌",
+        0: "停止",
+        1: "停止中",
+        2: "启动中",
+        3: "运行中"
+    }
+    instance_info = f"昵称: {data['config']['nickname']}\n"
+    status = status_map.get(data['status'], "未知状态")
+    instance_info += f"UUID: {data['instanceUuid']}\n启动次数: {data['started']}, 状态: {status}"
+    # 将创建时间和最后更新时间的时间戳转换为日期和时间
+    create_time = convert_timestamp_to_datetime(data['config']['createDatetime'])
+    last_time = convert_timestamp_to_datetime(data['config']['lastDatetime'])
+    instance_info += f"\n创建时间: {create_time}, 最后更新时间: {last_time}"
     cpu_usage_percent = f"{data['processInfo']['cpu']:.1%}"
-    memory_usage_gb = round(data['processInfo']['memory'] / (1024 ** 3), 1)
+    memory_usage_mb = round(data['processInfo']['memory'] / (1024 ** 2), 3) * 100
     elapsed_time_hours = round(data['processInfo']['elapsed'] / 3600000, 1)
-    process_info = f"CPU使用率: {cpu_usage_percent}, 内存使用: {memory_usage_gb}GB\n创建时间: {data['processInfo']['ctime']}, 运行时间: {elapsed_time_hours}小时"
-    text = f"实例编号: Node{node_number}:\n实例信息:\n{instance_info}\n{system_info}\n{process_info}"
+    process_info = f"CPU使用率: {cpu_usage_percent}, 内存使用: {memory_usage_mb}%\n运行时间: {elapsed_time_hours}小时"
+    text = f"实例信息:\n{instance_info}\n{process_info}"
     return text
+
 
 async def instances():
     instance_params_list = await auth()
+    print(instance_params_list)
     if instance_params_list:
         results = []
         async with aiohttp.ClientSession() as session:
@@ -106,11 +131,12 @@ async def instance():
     instances_list = await instances()
     instance_text = ""
     for index, instance_data in enumerate(instances_list, start=1):
-        instance_text += f"收到请求:\n{instance_data}\n\n"
+        instance_text += f"{instance_data}\n\n"
     return instance_text.strip()
 
 
 #--------------------------------------------------------------------------------------------------------------------#
+
 
 def server_json_to_text(json_data):
     content = []
@@ -145,11 +171,15 @@ async def node():
         except Exception as e:
             print(f"An error occurred: {e}")
 
+
 #--------------------------------------------------------------------------------------------------------------------#
 
+async def server():
+    content = await node()
+    content += f"\n"
+    content += await instance()
+    return content
 
-
-
-
+#--------------------------------------------------------------------------------------------------------------------#
 
 
