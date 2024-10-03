@@ -7,7 +7,7 @@ import setproctitle
 
 # 自定义模块
 from Module.content import craft
-from Module.mcmanager import node, instance, server
+from Module.mcmanager import server
 
 # 定义日志路径
 log_dir = 'Log'

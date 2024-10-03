@@ -15,10 +15,10 @@ config_path = os.path.join(current_directory, "config.yaml")
 # 读取配置文件
 test_config = read(config_path)
 # 获取 apikey
-apikey = test_config.get("apikey", None)
+apikey = test_config.get("mcmanager_apikey", None)
 
 # 调用API链接
-daemonId = f"15c4caf0920347538aadc6d2ff1adc10"
+daemonId = f"f944a1100dfb49a998e68a43dbc5b467"
 url = f'http://game.happlelaoganma.cn:20000'
 server_url = f'{url}/api/service/remote_services_system?apikey={apikey}'
 auth_url = f'{url}/api/auth/search?apikey={apikey}&userName=ssddffaa&page=1&page_size=20&role=10'
@@ -33,6 +33,7 @@ headers = {
     'Content-Type': 'application/json; charset=utf-8',
     'X-Requested-With': 'XMLHttpRequest'
 }
+
 #--------------------------------------------------------------------------------------------------------------------#
 
 def instance_json_to_dict(json_data):
@@ -70,7 +71,6 @@ async def auth():
             print(f"An error occurred: {e}")
             return None
 
-
 def convert_timestamp_to_datetime(timestamp):
     # 将毫秒级时间戳转换为日期和时间
     datetime_obj = datetime.datetime.fromtimestamp(timestamp / 1000.0)
@@ -88,18 +88,18 @@ def instance_json_to_text(json_data, node_number):
     }
     instance_info = f"昵称: {data['config']['nickname']}\n"
     status = status_map.get(data['status'], "未知状态")
-    instance_info += f"UUID: {data['instanceUuid']}\n启动次数: {data['started']}, 状态: {status}"
+    instance_info += f"UUID: {data['instanceUuid']}\n启动次数: {data['started']}, 状态: {status}\n"
+    instance_info += f"当前玩家数: {data['info'].get('currentPlayers', '未知')}, 最大玩家数: {data['info'].get('maxPlayers', '未知')}\n"
     # 将创建时间和最后更新时间的时间戳转换为日期和时间
     create_time = convert_timestamp_to_datetime(data['config']['createDatetime'])
     last_time = convert_timestamp_to_datetime(data['config']['lastDatetime'])
-    instance_info += f"\n创建时间: {create_time}, 最后更新时间: {last_time}"
+    instance_info += f"创建时间: {create_time}, 最后更新时间: {last_time}"
     cpu_usage_percent = f"{data['processInfo']['cpu']:.1%}"
-    memory_usage_mb = round(data['processInfo']['memory'] / (1024 ** 2), 3) * 100
+    memory_usage_mb = round(data['processInfo']['memory'] / (1024 ** 2), 3)
     elapsed_time_hours = round(data['processInfo']['elapsed'] / 3600000, 1)
     process_info = f"CPU使用率: {cpu_usage_percent}, 内存使用: {memory_usage_mb}%\n运行时间: {elapsed_time_hours}小时"
     text = f"实例信息:\n{instance_info}\n{process_info}"
     return text
-
 
 async def instances():
     instance_params_list = await auth()
@@ -134,9 +134,7 @@ async def instance():
         instance_text += f"{instance_data}\n\n"
     return instance_text.strip()
 
-
 #--------------------------------------------------------------------------------------------------------------------#
-
 
 def server_json_to_text(json_data):
     content = []
@@ -171,7 +169,6 @@ async def node():
         except Exception as e:
             print(f"An error occurred: {e}")
 
-
 #--------------------------------------------------------------------------------------------------------------------#
 
 async def server():
@@ -181,5 +178,3 @@ async def server():
     return content
 
 #--------------------------------------------------------------------------------------------------------------------#
-
-
