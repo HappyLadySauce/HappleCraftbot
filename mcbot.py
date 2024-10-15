@@ -94,7 +94,7 @@ class HappleCraftBot(botpy.Client):
             response = await craft()
             # 返回用户消息
             await on_message_reply(response)
-        elif "HappleCraftBot" in message.content:
+        else:
             await on_message_reply(await kimi(message.content))
 
 # ----------------------------------------------------------------------------------------------------------------------#
