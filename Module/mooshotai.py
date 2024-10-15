@@ -188,7 +188,7 @@ system_messages = [
 # messages 中的消息按时间顺序从小到大排列
 messages = []
 
-def make_messages(input: str, n: int = 2) -> list[dict]:
+def make_messages(input: str, n: int = 4) -> list[dict]:
     """
     使用 make_messages 控制每次请求的消息数量，使其保持在一个合理的范围内，例如默认值是 20。在构建消息列表
     的过程中，我们会先添加 System Prompt，这是因为无论如何对消息进行截断，System Prompt 都是必不可少
@@ -223,31 +223,69 @@ def chat(input: str) -> str:
         temperature=0.3,
         # tools=tools,
     )
-
+    # =====================================================================================================================#
     # 查询使用token
+    # 定义一个ChatCompletionMessage类,方便转换为字典数据类型
+    class ChatCompletionMessage:
+        def __init__(self, content, role='assistant', function_call=None, tool_calls=None):
+            self.content = content
+            self.role = role
+            self.function_call = function_call
+            self.tool_calls = tool_calls
+
+        def to_dict(self):
+            # 将 ChatCompletionMessage 对象转换为字典
+            return {
+                'role': self.role,
+                'content': self.content,
+                # 'function_call': self.function_call,  # 如果需要，可以添加其他属性
+                # 'tool_calls': self.tool_calls,         # 如果需要，可以添加其他属性
+            }
+
+    def data_json(messages):
+        # 将列表中的每个元素转换为字典
+        processed_data = []
+        for item in messages:
+            if isinstance(item, dict):
+                # 如果是字典，直接添加到结果列表
+                processed_data.append(item)
+            elif isinstance(item, ChatCompletionMessage):
+                # 如果是 ChatCompletionMessage 对象，转换为字典
+                processed_data.append(item.to_dict())
+            else:
+                # 如果遇到未知类型，可以选择跳过或者抛出错误
+                print("Unknown item type, skipping:", item)
+                continue
+        return processed_data
+
+    messages_json = data_json(new_messages)
+
     data = {
         "model": "moonshot-v1-8k",
-        "messages": new_messages
+        "messages": messages_json
     }
     global tokens
     tokens = fetch_token(data)
-
+    #=====================================================================================================================#
     # 通过 API 我们获得了 Kimi 大模型给予我们的回复消息（role=assistant）
     assistant_message = completion.choices[0].message
     messages.append(assistant_message)
     return assistant_message.content
 
+
 #=====================================================================================================================#
+
 
 async def kimi(content):
     async with aiohttp.ClientSession() as session:
         data = await fetch_balance(session)
         balance = data['data']['available_balance']
-    sem = asyncio.Semaphore(10)
+    sem = asyncio.Semaphore(1)
     async with sem:
         # 使用 asyncio.to_thread 在线程池中运行同步函数
         response = await asyncio.to_thread(chat, content)
-        response = f"{response}\n本次消耗token: {tokens}\n消耗rmb: {use_token(tokens)}\n机器人余额: {balance}rmb"
+        # response = f"{response}"
+        response = f"{response}\n本次投喂: {use_token(tokens)}元,感觉又有干劲了呢！\n消耗token: {tokens}"
         return response
 
 
