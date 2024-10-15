@@ -8,6 +8,7 @@ import setproctitle
 # 自定义模块
 from Module.content import craft
 from Module.mcmanager import server
+from Module.mooshotai import kimi
 
 # 定义日志路径
 log_dir = 'Log'
@@ -21,7 +22,6 @@ _log_channel = logging.get_logger(channel_log_path)
 # 删除上一次bot运行日志
 # if os.path.exists(start_log_path):
 #     os.remove(start_log_path)
-
 
 #======================================================================================================================#
 
@@ -62,7 +62,8 @@ class HappleCraftBot(botpy.Client):
             response = await craft()
             # 返回用户消息
             await on_group_at_reply(response, 0)
-
+        else:
+            await on_group_at_reply(await kimi(message.content), 0)
 
 # ----------------------------------------------------------------------------------------------------------------------#
 
@@ -93,7 +94,8 @@ class HappleCraftBot(botpy.Client):
             response = await craft()
             # 返回用户消息
             await on_message_reply(response)
-
+        elif "HappleCraftBot" in message.content:
+            await on_message_reply(await kimi(message.content))
 
 # ----------------------------------------------------------------------------------------------------------------------#
 
