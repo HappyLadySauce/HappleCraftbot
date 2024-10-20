@@ -26,7 +26,6 @@ _log_channel = logging.get_logger(channel_log_path)
 #======================================================================================================================#
 
 # 机器人运行流程
-
 class HappleCraftBot(botpy.Client):
     # 机器人准备好时触发
     async def on_ready(self):
@@ -39,6 +38,12 @@ class HappleCraftBot(botpy.Client):
     # on_at_message_create(self, message: Message)
     # 当频道的消息被删除时
     # on_public_message_delete(self, message: Message)
+
+    # async def on_group_at_message_create(self, message: GroupMessage):
+    #     group_openid = message.group_openid
+    #     info = await self.api.get_guild(guild_id=group_openid)
+    #     print(info)
+
     async def on_group_at_message_create(self, message: GroupMessage):
         # 封装回复函数,msg_type参数说明
         # 消息类型： 0 文本，2 是 markdown，3 ark 消息，4 embed，7 media 富媒体
@@ -49,9 +54,10 @@ class HappleCraftBot(botpy.Client):
                 msg_id=message.id,
                 content=response
             )
-            _log_group.info(f"\ngroup_openid: %s, \nmsg_id: %s, \n回复消息content: \"%s\"\n", message.group_openid, message.id, response)
+            _log_group.info(f"\ngroup_openid: %s, \nmsg_id: %s, \n回复消息content: [\"%s\"]\n", message.group_openid, message.id, response)
+
         # 记录用户发送消息
-        _log_group.info(f"\nMessage ID: %s, \n接受消息content: %s", message.id, message.content)
+        _log_group.info(f"\nMessage ID: %s, \n接受消息content: [\"%s\"]", message.id, message.content)
 
         # 开始执行公域事件
         if "/Server" in message.content:
@@ -64,6 +70,7 @@ class HappleCraftBot(botpy.Client):
             await on_group_at_reply(response, 0)
         else:
             await on_group_at_reply(await kimi(message.content), 0)
+
 
 # ----------------------------------------------------------------------------------------------------------------------#
 
@@ -80,10 +87,10 @@ class HappleCraftBot(botpy.Client):
                 msg_id=message.id,
                 content=response
             )
-            _log_channel.info(f"\nchannle_id: %s, \nmsg_id: %s, \n回复消息content: \"%s\"\n", message.channel_id,message.id, response)
+            _log_channel.info(f"\nchannle_id: %s, \nmsg_id: %s, \n回复消息content: [\"%s\"]\n", message.channel_id,message.id, response)
 
         # 记录用户发送消息
-        _log_channel.info(f"\nMessage ID: %s, \n接受消息content: %s", message.id, message.content)
+        _log_channel.info(f"\nMessage ID: %s, \n接受消息content: [\"%s\"]", message.id, message.content)
 
         # 开始执行私域事件
         if "/Server" in message.content:

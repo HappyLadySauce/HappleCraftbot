@@ -280,7 +280,7 @@ async def kimi(content):
     async with aiohttp.ClientSession() as session:
         data = await fetch_balance(session)
         balance = data['data']['available_balance']
-    sem = asyncio.Semaphore(1)
+    sem = asyncio.Semaphore(10)
     async with sem:
         # 使用 asyncio.to_thread 在线程池中运行同步函数
         response = await asyncio.to_thread(chat, content)
